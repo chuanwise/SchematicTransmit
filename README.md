@@ -8,7 +8,6 @@ SchematicTransmitServer
 1. Every time Client started, it will upload its version string (like "1.0") to server, and server returns if it's supposed to upadte.
 When the newest client exist in server fold client\, it'll be sent to user's computer so as to auto update. 
 (If the newest client doesn't exist, server will tell user that client needn't update).
-
 客户端每次开启都会向服务器发送版本号，由服务器审核该版本是否可用。可通过修改设置中的 usableVersion 项以拒绝部分过时版本启动。当版本不可用，会检查服务器端上是否有最新版本软件。若有，则会自动下载到用户的电脑上，以实现自动更新。
 
 2. View user uploaded files and other behavioral information;
