@@ -2,6 +2,7 @@ package com.taixue.schemtrans.Progress;
 
 import com.sun.org.apache.xpath.internal.operations.Bool;
 import com.taixue.schemtrans.stage.Event;
+import com.taixue.schemtrans.utility.ErrorDialog;
 import com.taixue.schemtrans.utility.Icon;
 import javafx.beans.property.SimpleStringProperty;
 import javafx.concurrent.Task;
@@ -26,17 +27,10 @@ import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
 
 public class SendFiles implements Runnable{
-    private Text totalDetailText, currentDetailText;
-    private ProgressBar totalProgress, currentProgress;
     private Status status;
     private EventTable eventTable;
-    private Stage stage;
 
-    public SendFiles(Text totalDetailText, ProgressBar totalProgress, Text currentDetailText, ProgressBar currentProgress, EventTable exentTable, Status status) {
-        this.currentDetailText = currentDetailText;
-        this.currentProgress = currentProgress;
-        this.totalDetailText = totalDetailText;
-        this.totalProgress = totalProgress;
+    public SendFiles(EventTable exentTable, Status status) {
         this.status = status;
         this.eventTable = exentTable;
     }
@@ -51,7 +45,7 @@ public class SendFiles implements Runnable{
         if (files == null) {
             return;
         }
-        showProgress();
+
         ArrayList<Event> res = new ArrayList<>();
         List<Pair<File, String>> result = sendFiles(files, res);
         eventTable.getItems().addAll(res);
@@ -63,46 +57,13 @@ public class SendFiles implements Runnable{
             else {
                 status.setError("部分文件传送失败 " + result.size() + " 个文件（共 " + files.size() + " 个文件）");
             }
-
-            Alert alert = new Alert(Alert.AlertType.ERROR);
-            alert.setTitle("错误报告");
-            alert.setHeaderText(status.getText() + "\n成功率：" + (100 * (files.size() - result.size()) / ((double) files.size())) + "%");
-            VBox vBox = new VBox(SchematicTransmission.STAGE_PADDING);
-            alert.getDialogPane().setPadding(new Insets(SchematicTransmission.ERROR_PADDING));
-            vBox.setPrefHeight(SchematicTransmission.ERROR_HEIGHT - 100);
-            vBox.setPrefWidth(SchematicTransmission.ERROR_WIDTH);
-
-            ((Stage) alert.getDialogPane().getScene().getWindow()).getIcons().add(Icon.ERROR_ICON);
-
-            TableView<Pair<File, String>> failReasonTable = new TableView<>();
-            TableColumn<Pair<File, String>, String> filePathColumn = new TableColumn<>("路径");
-            TableColumn<Pair<File, String>, String> fileNameColumn = new TableColumn<>("文件名");
-            TableColumn<Pair<File, String>, String> reasonColumn = new TableColumn<>("失败原因");
-
-            failReasonTable.getColumns().addAll(reasonColumn, fileNameColumn, filePathColumn);
-            fileNameColumn.setCellValueFactory(e -> new SimpleStringProperty(e.getValue().getKey().getName()));
-            filePathColumn.setCellValueFactory(e -> new SimpleStringProperty(e.getValue().getKey().getAbsolutePath()));
-            reasonColumn.setCellValueFactory(e -> new SimpleStringProperty(e.getValue().getValue()));
-
-            vBox.getChildren().addAll(failReasonTable);
-
-            failReasonTable.getItems().addAll(result);
-
-            alert.getDialogPane().setContent(vBox);
-            alert.showAndWait();
+            ErrorDialog errorDialog = new ErrorDialog();
+            errorDialog.getItems().addAll(result);
+            errorDialog.showAndWait();
         }
         else {
             status.setSuccess("传送成功 " + files.size() + " 个文件");
         }
-        hideProgress();
-    }
-
-    public void showProgress() {
-        SchematicTransmission.operatorApplication.showProgress();
-    }
-
-    public void hideProgress() {
-        SchematicTransmission.operatorApplication.hideProgress();
     }
 
     public static List<File> showUploadDialog(Stage stage) {
@@ -126,7 +87,6 @@ public class SendFiles implements Runnable{
 
         int sentFile = 0;
         int totalFile = files.size();
-        totalDetailText.setText("正在发送 " + files.size() + " 个文件");
         Event currentEvent;
 
         for (File file : files) {
@@ -134,7 +94,6 @@ public class SendFiles implements Runnable{
             sentFile++;
 
             current = SchematicTransmission.socket.sendFile(file);
-            currentDetailText.setText("正在发送 " + file.getAbsolutePath());
 
             currentEvent = new Event();
             currentEvent.setType("上传文件");
@@ -145,7 +104,6 @@ public class SendFiles implements Runnable{
             if (!current.getKey()) {
                 result.add(new Pair<>(file, current.getValue()));
             }
-            totalProgress.setProgress(((double) sentFile) / files.size());
         }
         return result;
     }

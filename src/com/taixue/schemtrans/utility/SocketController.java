@@ -172,36 +172,50 @@ public class SocketController {
         return objectInputStream.readLong();
     }
 
-    public Task receiveFile(File saveTo, long size) throws IOException {
-        return new Task() {
-            @Override
-            protected Object call() throws Exception {
-                long receivedSize = 0;
+    public Pair<Boolean, String> receiveFile(String dirName) throws IOException{
+        return receiveFile(new File(dirName));
+    }
 
-                try (FileOutputStream fileOutputStream = new FileOutputStream(saveTo);) {
-                    byte[] buffer = new byte[SchematicTransmission.SEND_PACKAGE_SIZE];
+    public Pair<Boolean, String> receiveFile(File dir) throws IOException {
+        try {
+            String fileName = ((String) receiveObject());
+            long size = receiveLong();
+            return receiveFile(new File(dir, fileName), size);
+        }
+        catch (Exception exception) {
+            SchematicTransmission.showExceptionDialogAndExit(exception);
+            return null;
+        }
+    }
 
-                    int len = 0;
-                    // 因为文件内容较大，不能一次发送完毕，因此需要通过循环来分次发送
+    public Pair<Boolean, String> receiveFile(File saveTo, long size) throws IOException {
+        long receivedSize = 0;
 
-                    try {
-                        while ((len = inputStream.read(buffer)) != -1 && (receivedSize += len) <= size) {
-                            fileOutputStream.write(buffer, 0, len);
-                            updateProgress(receivedSize, size);
-                        }
-                    } catch (SocketTimeoutException e) {
-                    }
-                    if (receivedSize != size) {
-                        sendCommand("fail", "文件未完整传送（传送 " + receivedSize + " B，文件总大小 " + size + " B）");
-                        failed();
-                    } else {
-                        sendCommand("success");
-                        succeeded();
-                    }
+        try (FileOutputStream fileOutputStream = new FileOutputStream(saveTo);) {
+            byte[] buffer = new byte[SchematicTransmission.SEND_PACKAGE_SIZE];
+            int len = 0;
+
+            try {
+                while ((len = inputStream.read(buffer)) != -1 && (receivedSize += len) <= size) {
+                    fileOutputStream.write(buffer, 0, len);
                 }
-                return null;
+            } catch (SocketTimeoutException e) {
             }
-        };
+            if (receivedSize != size) {
+                sendBoolean(false);
+                String failMessage = "文件未完整传送（传送 " + receivedSize + " B，文件总大小 " + size + " B）";
+                sendObject(failMessage);
+                return new Pair<>(false, failMessage);
+            } else {
+                sendBoolean(true);
+                return new Pair<>(true, null);
+            }
+        }
+    }
+
+    public void sendBoolean(boolean val) throws IOException {
+        objectOutputStream.writeBoolean(val);
+        objectOutputStream.flush();
     }
 
     public Object receiveObject() throws SocketTimeoutException, ClassNotFoundException, IOException{

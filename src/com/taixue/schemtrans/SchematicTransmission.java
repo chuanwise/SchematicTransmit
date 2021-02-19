@@ -168,7 +168,6 @@ public class SchematicTransmission {
 
     public static File downNewestVersion() {
         socket.sendCommand("get_client");
-        Task receiveFileTask = null;
 
         try {
             String fileName = ((String) socket.receiveObject());
@@ -212,26 +211,8 @@ public class SchematicTransmission {
                 alert.getButtonTypes().addAll(cancel);
                 alert.getDialogPane().setContent(progressBar);
 
-                receiveFileTask = socket.receiveFile(file, size);
+                socket.receiveFile(file, size);
                 progressBar.progressProperty().unbind();
-                progressBar.progressProperty().bind(receiveFileTask.progressProperty());
-
-                new Thread(receiveFileTask).start();
-                receiveFileTask.progressProperty().addListener(e -> {
-                    if (progressBar.getProgress() == 1) {
-                        alert.close();
-                    }
-                });
-
-                alert.showAndWait();
-
-                if (receiveFileTask.getProgress() != 1 && alert.getResult().equals(cancel)) {
-                    receiveFileTask.cancel();
-                    System.exit(0);
-                }
-                else {
-                    return file;
-                }
             }
         }
         catch (Exception exception) {
@@ -241,11 +222,6 @@ public class SchematicTransmission {
             alert.setContentText("异常：" + exception);
             exception.printStackTrace();
             alert.show();
-        }
-        finally {
-            if (receiveFileTask != null && receiveFileTask.isRunning()) {
-                receiveFileTask.cancel();
-            }
         }
         return null;
     }
@@ -271,34 +247,7 @@ public class SchematicTransmission {
     public static void autoUpdateHeaderPicture() {
         try {
             socket.sendCommand("get_header_picture");
-
-            String fileName = ((String) socket.receiveObject());
-            long size = socket.receiveLong();
-
-            File file = Icon.HEADER_FILE;
-            Alert alert = new Alert(Alert.AlertType.ERROR);
-
-            if (file.getParentFile().exists() || file.getParentFile().mkdirs()) {
-                return;
-            }
-            if (file.exists() && !file.delete()) {
-                return;
-            }
-            if (file.getParentFile().getFreeSpace() < size) {
-                alert.setHeaderText("没有足够的空间存放即将发送的文件");
-                alert.setContentText("新版客户端大小：" + size + " B，存储区域仅剩 " + file.getParentFile().getFreeSpace() + " B\n");
-
-                alert.showAndWait();
-                return;
-            }
-
-            socket.sendCommand("accept");
-            Task receiveFileTask = socket.receiveFile(file, size);
-
-            new Thread(receiveFileTask).start();
-            long beginTime = System.currentTimeMillis();
-
-            while (receiveFileTask.isRunning());
+            socket.receiveFile(Fold.newVersionDir);
         }
         catch (Throwable throwable) {
             showExceptionDialog(throwable);

@@ -10,7 +10,8 @@ import java.io.*;
 public class Setting implements Serializable {
     private static final long serialVersionUID = 615560069086687056L;
 
-    private String serverName = "r.mcstory.cc";
+//    private String serverName = "r.mcstory.cc";
+    private String serverName = "localHost";
     private int port = 37738;
 
     public static transient final String DEFAULT_SEVER_NAME = "r.mcstory.cc";

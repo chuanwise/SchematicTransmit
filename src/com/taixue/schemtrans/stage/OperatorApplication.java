@@ -29,15 +29,15 @@ public class OperatorApplication extends Application {
 
     private BorderPane content = new BorderPane();
 
-    private VBox progressVBox = new VBox(SchematicTransmission.PANE_SPACING);
-
-    private Text totalProgressText = new Text("总进度");
-    private Text totalDetailText = new Text("细节");
-    private ProgressBar totalProgress = new ProgressBar();
-
-    private Text currentProgressText = new Text("当前项");
-    private Text currentDetailText = new Text("当前细节");
-    private ProgressBar currentProgress = new ProgressBar();
+//    private VBox progressVBox = new VBox(SchematicTransmission.PANE_SPACING);
+//
+//    private Text totalProgressText = new Text("总进度");
+//    private Text totalDetailText = new Text("细节");
+//    private ProgressBar totalProgress = new ProgressBar();
+//
+//    private Text currentProgressText = new Text("当前项");
+//    private Text currentDetailText = new Text("当前细节");
+//    private ProgressBar currentProgress = new ProgressBar();
 
     private Button upload = new Button("上传");
     private Button download = new Button("下载");
@@ -77,13 +77,13 @@ public class OperatorApplication extends Application {
         content.setPadding(new Insets(SchematicTransmission.STAGE_PADDING));
 
         HBox totalProgressHeader = new HBox(SchematicTransmission.PANE_SPACING);
-        totalProgressHeader.getChildren().addAll(totalProgressText, totalDetailText);
+//        totalProgressHeader.getChildren().addAll(totalProgressText, totalDetailText);
         HBox currentProgressHeader = new HBox(SchematicTransmission.PANE_SPACING);
-        currentProgressHeader.getChildren().addAll(currentProgressText, currentDetailText);
-        progressVBox.getChildren().addAll(totalProgressHeader, totalProgress, currentProgressHeader, currentProgress);
+//        currentProgressHeader.getChildren().addAll(currentProgressText, currentDetailText);
+//        progressVBox.getChildren().addAll(totalProgressHeader, totalProgress, currentProgressHeader, currentProgress);
 
-        totalProgress.setPrefWidth(SchematicTransmission.STAGE_WIDTH - 2 * SchematicTransmission.STAGE_PADDING);
-        currentProgress.setPrefWidth(totalProgress.getPrefWidth());
+//        totalProgress.setPrefWidth(SchematicTransmission.STAGE_WIDTH - 2 * SchematicTransmission.STAGE_PADDING);
+//        currentProgress.setPrefWidth(totalProgress.getPrefWidth());
 
 //        content.setTop(progressVBox);
 
@@ -119,7 +119,7 @@ public class OperatorApplication extends Application {
         });
 
         download.setOnAction(event -> {
-            SchematicTransmission.showNoSuchFunctionDialog();
+            download();
         });
 
         exit.setOnAction(event -> {
@@ -131,16 +131,12 @@ public class OperatorApplication extends Application {
         });
     }
 
+    public void download() {
+
+    }
+
     public void uploadFiles() {
-        Platform.runLater(new SendFiles(totalDetailText, totalProgress, currentDetailText, currentProgress, eventTable, status));
-    }
-
-    public void showProgress() {
-        content.setTop(progressVBox);
-    }
-
-    public void hideProgress() {
-        content.setTop(null);
+        new SendFiles(eventTable, status);
     }
 
     public void shutdown() {
